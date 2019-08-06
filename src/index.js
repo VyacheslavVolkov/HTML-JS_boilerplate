@@ -86,7 +86,7 @@ function saveTasks() {
 
 function fetchTasks() {
   const data = localStorage.getItem('TASKS');
-  if (data === null) {
+  if (data !== null) {
     tasks = JSON.parse(data);
   }
 }
