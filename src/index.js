@@ -53,11 +53,26 @@ function toggleTaskStatus(index) {
   displayTasks();
 }
 
-function deleteTask(event, taskIndex) {
-  event.preventDefault();
+function deleteTask(taskIndex) {
   tasks.splice(taskIndex, 1);
   saveTasks();
   displayTasks();
+  return false;
+}
+
+function changeText(element, index) {
+  let input = document.createElement('input');
+  input.setAttribute('onkeypress', `submitText(this, event, ${index})`);
+  input.value = element.innerHTML;
+  element.parentNode.replaceChild(input, element);
+}
+
+function submitText(ele, event, index) {
+  if (event.keyCode === 13) {
+    tasks[index].task = ele.value;
+    saveTasks();
+    displayTasks();
+  }
 }
 
 function generateTaskHtml(task, index) {
@@ -68,10 +83,10 @@ function generateTaskHtml(task, index) {
               <input id="toggleTaskStatus" type="checkbox" onchange="toggleTaskStatus(${index})" value="" class="" ${task.isComplete ? 'checked' : ''}>
             </div>
             <div class="col-md-10 col-xs-10 col-lg-10 col-sm-10 task-text">
-              ${task.task}
+              <span ondblclick="changeText(this, ${index})">${task.task}</span>
             </div>
             <div class="col-md-1 col-xs-1 col-lg-1 col-sm-1 delete-icon-area">
-              <a class="" href="/" onClick="deleteTask(event, ${index})">
+              <a class="" href="/" onClick="return deleteTask(${index});">
               <i id="deleteTask" data-id="${index}" class="delete-icon fa fa-trash-o"></i>
               </a>
             </div>
