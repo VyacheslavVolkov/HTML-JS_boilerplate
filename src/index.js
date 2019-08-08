@@ -1,4 +1,43 @@
 let tasks = [];
+let sortOpenOptions = [
+  {
+    text: 'Text (asc)',
+    sortFunction: (item1, item2) => item1.task.task.localeCompare(item2.task.task),
+  },
+  {
+    text: 'Text (desc)',
+    sortFunction: (item1, item2) => item2.task.task.localeCompare(item1.task.task),
+  },
+  {
+    text: 'Creation date (asc)',
+    sortFunction: (item1, item2) => new Date(item1.task.creationDate) - new Date(item2.task.creationDate),
+  },
+  {
+    text: 'Creation date (desc)',
+    sortFunction: (item1, item2) => new Date(item2.task.creationDate) - new Date(item1.task.creationDate),
+  },
+];
+let sortDoneOptions = [
+  {
+    text: 'Text (asc)',
+    sortFunction: (item1, item2) => item1.task.task.localeCompare(item2.task.task),
+  },
+  {
+    text: 'Text (desc)',
+    sortFunction: (item1, item2) => item2.task.task.localeCompare(item1.task.task),
+  },
+  {
+    text: 'Completion date (asc)',
+    sortFunction: (item1, item2) => new Date(item1.task.completionDate) - new Date(item2.task.completionDate),
+  },
+  {
+    text: 'Completion date (desc)',
+    sortFunction: (item1, item2) => new Date(item2.task.completionDate) - new Date(item1.task.completionDate),
+  },
+];
+
+let sortOpen = 0;
+let sortDone = 0;
 
 function search() {
   const input = document.getElementById('search');
@@ -25,6 +64,20 @@ function addEventListeners() {
   });
 }
 
+function changeSortOpen() {
+  sortOpen = document.getElementById('sortOpen').value;
+  saveSortOpen();
+  displaySortOptions('sortOpen', sortOpenOptions, sortOpen);
+  displayTasks();
+}
+
+function changeSortDone() {
+  sortDone = document.getElementById('sortDone').value;
+  saveSortDone();
+  displaySortOptions('sortDone', sortDoneOptions, sortDone);
+  displayTasks();
+}
+
 function addTaskClick() {
   let target = document.getElementById('addTask');
   addTask(target.value);
@@ -35,6 +88,7 @@ function addTask(task) {
   let newTask = {
     task,
     isComplete: false,
+    creationDate: new Date(),
   };
   let parentDiv = document.getElementById('addTask').parentElement;
   if (task === '') {
@@ -48,7 +102,14 @@ function addTask(task) {
 }
 
 function toggleTaskStatus(index) {
-  tasks[index].isComplete = !tasks[index].isComplete;
+  let task = tasks[index];
+  if (task.isComplete) {
+    task.completionDate = undefined;
+    task.isComplete = false;
+  } else {
+    task.completionDate = new Date();
+    task.isComplete = true;
+  }
   saveTasks();
   displayTasks();
 }
@@ -80,7 +141,9 @@ function generateTaskHtml(task, index) {
         <li class="list-group-item">
           <div class="row">
             <div class="col-md-1 col-xs-1 col-lg-1 col-sm-1 form-check form-inline">
-              <input id="toggleTaskStatus" type="checkbox" onchange="toggleTaskStatus(${index})" value="" class="" ${task.isComplete ? 'checked' : ''}>
+              <input id="toggleTaskStatus" type="checkbox" onchange="toggleTaskStatus(${index})" value="" class="" ${
+    task.isComplete ? 'checked' : ''
+  }>
             </div>
             <div class="col-md-10 col-xs-10 col-lg-10 col-sm-10 task-text">
               <span ondblclick="changeText(this, ${index})">${task.task}</span>
@@ -99,10 +162,26 @@ function saveTasks() {
   localStorage.setItem('TASKS', JSON.stringify(tasks));
 }
 
-function fetchTasks() {
+function saveSortOpen() {
+  localStorage.setItem('SORT_OPEN', sortOpen);
+}
+
+function saveSortDone() {
+  localStorage.setItem('SORT_DONE', sortDone);
+}
+
+function fetchData() {
   const data = localStorage.getItem('TASKS');
   if (data !== null) {
     tasks = JSON.parse(data);
+  }
+  const sortOpenData = localStorage.getItem('SORT_OPEN');
+  if (sortOpenData !== null) {
+    sortOpen = sortOpenData;
+  }
+  const sortDoneData = localStorage.getItem('SORT_DONE');
+  if (sortDoneData !== null) {
+    sortDone = sortDoneData;
   }
 }
 
@@ -111,15 +190,42 @@ function displayTasks() {
   const completedTaskList = document.getElementById('completedTaskList');
   toDoTaskList.innerHTML = '';
   completedTaskList.innerHTML = '';
+  let completedTasks = [];
+  let toDoTasks = [];
   tasks.forEach((task, index) => {
     if (task.isComplete) {
-      completedTaskList.innerHTML += generateTaskHtml(task, index);
+      completedTasks.push({ task: task, index: index });
     } else {
-      toDoTaskList.innerHTML += generateTaskHtml(task, index);
+      toDoTasks.push({ task: task, index: index });
     }
+  });
+  toDoTasks.sort(sortOpenOptions[sortOpen].sortFunction);
+  // completedTasks.sort(sortDoneOptions[sortDone].sortFunction);
+  toDoTasks.forEach(taskWrapper => {
+    toDoTaskList.innerHTML += generateTaskHtml(taskWrapper.task, taskWrapper.index);
+  });
+  completedTasks.forEach(taskWrapper => {
+    completedTaskList.innerHTML += generateTaskHtml(taskWrapper.task, taskWrapper.index);
   });
 }
 
-fetchTasks();
+function displaySortOptions(dropDown, options, selection) {
+  console.log(selection);
+  const selector = document.getElementById(dropDown);
+  selector.options.length = 0;
+  options.forEach((option, index) => {
+    const element = document.createElement('option');
+    element.text = option.text;
+    if (index === parseInt(selection)) {
+      element.setAttribute('selected', 'selected');
+    }
+    element.value = index;
+    selector.add(element);
+  });
+}
+
+fetchData();
+displaySortOptions('sortOpen', sortOpenOptions, sortOpen);
+displaySortOptions('sortDone', sortDoneOptions, sortDone);
 displayTasks();
 addEventListeners();
