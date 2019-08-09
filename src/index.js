@@ -1,4 +1,6 @@
 let tasks = [];
+
+//start sorting dropdown functionality
 let sortOpenOptions = [
   {
     text: 'Text (asc)',
@@ -35,10 +37,41 @@ let sortDoneOptions = [
     sortFunction: (item1, item2) => new Date(item2.task.completionDate) - new Date(item1.task.completionDate),
   },
 ];
-
 let sortOpen = 0;
 let sortDone = 0;
 
+function changeSortOpen() {
+  sortOpen = document.getElementById('sortOpen').value;
+  saveSortOpen();
+  displaySortOptions('sortOpen', sortOpenOptions, sortOpen);
+  displayTasks();
+}
+
+function changeSortDone() {
+  sortDone = document.getElementById('sortDone').value;
+  saveSortDone();
+  displaySortOptions('sortDone', sortDoneOptions, sortDone);
+  displayTasks();
+}
+
+function displaySortOptions(dropDown, options, selection) {
+  console.log(selection);
+  const selector = document.getElementById(dropDown);
+  selector.options.length = 0;
+  options.forEach((option, index) => {
+    const element = document.createElement('option');
+    element.text = option.text;
+    if (index === parseInt(selection)) {
+      element.setAttribute('selected', 'selected');
+    }
+    element.value = index;
+    selector.add(element);
+  });
+}
+
+//end sorting dropdown functionality
+
+//start search functionality
 function search() {
   const input = document.getElementById('search');
   const searchString = input.value.toUpperCase();
@@ -54,28 +87,14 @@ function search() {
   }
 }
 
-function addEventListeners() {
-  // Add Task
-  document.getElementById('addTask').addEventListener('keypress', event => {
-    if (event.code === 'Enter') {
-      addTask(event.target.value);
-      event.target.value = '';
-    }
-  });
-}
+//end search functionality
 
-function changeSortOpen() {
-  sortOpen = document.getElementById('sortOpen').value;
-  saveSortOpen();
-  displaySortOptions('sortOpen', sortOpenOptions, sortOpen);
-  displayTasks();
-}
-
-function changeSortDone() {
-  sortDone = document.getElementById('sortDone').value;
-  saveSortDone();
-  displaySortOptions('sortDone', sortDoneOptions, sortDone);
-  displayTasks();
+//start task management functions
+function addTaskInput(event) {
+  if (event.code === 'Enter') {
+    addTask(event.target.value);
+    event.target.value = '';
+  }
 }
 
 function addTaskClick() {
@@ -136,28 +155,9 @@ function submitText(ele, event, index) {
   }
 }
 
-function generateTaskHtml(task, index) {
-  return `
-        <li class="list-group-item">
-          <div class="row">
-            <div class="col-md-1 col-xs-1 col-lg-1 col-sm-1 form-check form-inline">
-              <input id="toggleTaskStatus" type="checkbox" onchange="toggleTaskStatus(${index})" value="" class="" ${
-    task.isComplete ? 'checked' : ''
-  }>
-            </div>
-            <div class="col-md-10 col-xs-10 col-lg-10 col-sm-10 task-text">
-              <span ondblclick="changeText(this, ${index})">${task.task}</span>
-            </div>
-            <div class="col-md-1 col-xs-1 col-lg-1 col-sm-1 delete-icon-area">
-              <a class="" href="/" onClick="return deleteTask(${index});">
-              <i id="deleteTask" data-id="${index}" class="delete-icon fa fa-trash-o"></i>
-              </a>
-            </div>
-          </div>
-        </li>
-      `;
-}
+//end task management functions
 
+//start local storage communication
 function saveTasks() {
   localStorage.setItem('TASKS', JSON.stringify(tasks));
 }
@@ -185,6 +185,31 @@ function fetchData() {
   }
 }
 
+//end local storage communication
+
+//start tasks display functionality
+function generateTaskHtml(task, index) {
+  return `
+        <li class="list-group-item">
+          <div class="row">
+            <div class="col-md-1 col-xs-1 col-lg-1 col-sm-1 form-check form-inline">
+              <input id="toggleTaskStatus" type="checkbox" onchange="toggleTaskStatus(${index})" value="" class="" ${
+    task.isComplete ? 'checked' : ''
+  }>
+            </div>
+            <div class="col-md-10 col-xs-10 col-lg-10 col-sm-10 task-text">
+              <span ondblclick="changeText(this, ${index})">${task.task}</span>
+            </div>
+            <div class="col-md-1 col-xs-1 col-lg-1 col-sm-1 delete-icon-area">
+              <a class="" href="/" onClick="return deleteTask(${index});">
+              <i id="deleteTask" data-id="${index}" class="delete-icon fa fa-trash-o"></i>
+              </a>
+            </div>
+          </div>
+        </li>
+      `;
+}
+
 function displayTasks() {
   const toDoTaskList = document.getElementById('toDoTaskList');
   const completedTaskList = document.getElementById('completedTaskList');
@@ -209,23 +234,9 @@ function displayTasks() {
   });
 }
 
-function displaySortOptions(dropDown, options, selection) {
-  console.log(selection);
-  const selector = document.getElementById(dropDown);
-  selector.options.length = 0;
-  options.forEach((option, index) => {
-    const element = document.createElement('option');
-    element.text = option.text;
-    if (index === parseInt(selection)) {
-      element.setAttribute('selected', 'selected');
-    }
-    element.value = index;
-    selector.add(element);
-  });
-}
+//end task display functionality
 
 fetchData();
 displaySortOptions('sortOpen', sortOpenOptions, sortOpen);
 displaySortOptions('sortDone', sortDoneOptions, sortDone);
 displayTasks();
-addEventListeners();
